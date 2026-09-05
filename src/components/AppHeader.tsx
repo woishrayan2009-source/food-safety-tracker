@@ -14,7 +14,10 @@ export default function AppHeader() {
     <header className="app-header">
       <div className="app-header-inner">
         <Link to="/dashboard" className="app-wordmark">
-          Food Safety <span>Tracker</span>
+          <img
+            src="/foodsafety-tracker-logo-horizontal.svg"
+            alt="Food Safety Tracker"
+          />
         </Link>
         <nav className="app-nav">
           <Link

@@ -8,27 +8,44 @@
 
 :root {
   /* Surfaces */
-  --paper: #faf9f4;
+  --paper: #f4f7f3;
   --panel: #ffffff;
-  --ink: #18170f;
-  --ink-soft: #58564a;
-  --line: #ded9c8;
-  --line-strong: #18170f;
+  --ink: #17211b;
+  --ink-soft: #526158;
+  --line: #d5ded7;
+  --line-strong: #17211b;
 
   /* Brand — used for links, focus, primary actions. Not a risk color. */
-  --brand: #2f5233;
-  --brand-hover: #24401f;
-  --brand-tint: #e8efe2;
+  --brand: #176b5a;
+  --brand-hover: #105344;
+  --brand-tint: #e2f0ea;
 
-  /* Risk semantics — reserved for verdicts only */
-  --safe: #2f5233;
-  --safe-tint: #e8efe2;
-  --caution: #93641c;
-  --caution-tint: #f6ecd6;
-  --danger: #9a3324;
-  --danger-tint: #f6e2dc;
+  /* Risk semantics — each level has its own readable accent. */
+  --risk-low: #1f6f43;
+  --risk-low-tint: #e3f2e8;
+  --risk-moderate: #7a4e00;
+  --risk-moderate-tint: #fff1cc;
+  --risk-high: #9a3412;
+  --risk-high-tint: #ffeadf;
+  --risk-critical: #b42318;
+  --risk-critical-tint: #fee4e2;
 
-  --radius: 3px;
+  /* Compatibility aliases used by the existing Settings and auth screens. */
+  --safe: var(--risk-low);
+  --safe-tint: var(--risk-low-tint);
+  --caution: var(--risk-moderate);
+  --caution-tint: var(--risk-moderate-tint);
+  --danger: var(--risk-critical);
+  --danger-tint: var(--risk-critical-tint);
+
+  --radius: 6px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
   --font-display: "Archivo", "Arial Black", sans-serif;
   --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
 
@@ -118,6 +135,9 @@ a {
 }
 
 .app-wordmark {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 16px;
@@ -125,6 +145,14 @@ a {
   color: var(--paper);
   text-decoration: none;
   white-space: nowrap;
+}
+
+.app-wordmark img {
+  display: block;
+  width: auto;
+  height: 34px;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .app-wordmark span {
@@ -165,7 +193,7 @@ a {
 }
 
 .app-nav-scan:hover {
-  background: #e9e7dc;
+  background: var(--brand-tint);
 }
 
 /* --------------------------------------------------------------------- */
@@ -204,6 +232,15 @@ a {
 
 .dashboard-header p {
   font-family: var(--font-body);
+}
+
+.capture-title {
+  margin: 0 0 var(--space-1);
+}
+
+.capture-intro {
+  margin: 0;
+  color: var(--ink-soft);
 }
 
 /* --------------------------------------------------------------------- */
@@ -414,6 +451,15 @@ a {
   background: var(--paper);
 }
 
+.btn-secondary:focus-visible,
+.btn-danger:focus-visible,
+.manual-barcode-row button:focus-visible,
+.search-result-item:focus-visible,
+.tab-button:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+}
+
 .btn-secondary:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -545,22 +591,27 @@ a {
 }
 
 .risk-low {
-  background: var(--safe-tint);
-  color: var(--safe);
-  border-color: var(--safe);
+  background: var(--risk-low-tint);
+  color: var(--risk-low);
+  border-color: var(--risk-low);
 }
 
 .risk-moderate {
-  background: var(--caution-tint);
-  color: var(--caution);
-  border-color: var(--caution);
+  background: var(--risk-moderate-tint);
+  color: var(--risk-moderate);
+  border-color: var(--risk-moderate);
 }
 
-.risk-high,
+.risk-high {
+  background: var(--risk-high-tint);
+  color: var(--risk-high);
+  border-color: var(--risk-high);
+}
+
 .risk-critical {
-  background: var(--danger-tint);
-  color: var(--danger);
-  border-color: var(--danger);
+  background: var(--risk-critical-tint);
+  color: var(--risk-critical);
+  border-color: var(--risk-critical);
 }
 
 /* --------------------------------------------------------------------- */
@@ -687,6 +738,33 @@ a {
   text-align: center;
 }
 
+.search-loading,
+.search-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  background: var(--paper);
+  border-left: 3px solid var(--brand);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.search-empty {
+  border-left-color: var(--line-strong);
+}
+
+.search-loading::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--line);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: result-spin 0.8s linear infinite;
+}
+
 .ocr-dropzone {
   display: flex;
   align-items: center;
@@ -764,6 +842,59 @@ a {
   gap: 2px;
 }
 
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.resolved-item-name {
+  margin: 0;
+  font-size: 20px;
+}
+
+.resolved-item-brand {
+  margin: var(--space-1) 0 var(--space-4);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.food-stat {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.food-stat-value {
+  display: block;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.food-stat-label {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.ingredients-note {
+  margin: var(--space-4) 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.resolved-item-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
 /* --------------------------------------------------------------------- */
 /* Result page                                                            */
 /* --------------------------------------------------------------------- */
@@ -808,16 +939,57 @@ a {
 }
 
 .risk-badge-large.risk-low {
-  border-color: var(--safe);
+  border-color: var(--risk-low);
+  background: var(--risk-low-tint);
 }
 
 .risk-badge-large.risk-moderate {
-  border-color: var(--caution);
+  border-color: var(--risk-moderate);
+  background: var(--risk-moderate-tint);
 }
 
-.risk-badge-large.risk-high,
+.risk-badge-large.risk-high {
+  border-color: var(--risk-high);
+  background: var(--risk-high-tint);
+}
+
 .risk-badge-large.risk-critical {
-  border-color: var(--danger);
+  border-color: var(--risk-critical);
+  background: var(--risk-critical-tint);
+}
+
+.result-verdict {
+  padding: 20px;
+  border-left: 6px solid currentColor;
+  animation: verdict-enter 360ms ease-out both;
+}
+
+.result-verdict.risk-low { color: var(--risk-low); }
+.result-verdict.risk-moderate { color: var(--risk-moderate); }
+.result-verdict.risk-high { color: var(--risk-high); }
+.result-verdict.risk-critical { color: var(--risk-critical); }
+
+.result-verdict .eyebrow {
+  color: currentColor;
+}
+
+.result-verdict .risk-badge-large {
+  color: currentColor;
+}
+
+.result-back-link {
+  margin: var(--space-5) 0 0;
+}
+
+.result-back-link a {
+  color: var(--brand);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@keyframes verdict-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .result-food-name {
@@ -892,6 +1064,44 @@ a {
   font-size: 12px;
   color: var(--ink-soft);
   line-height: 1.55;
+}
+
+@media (max-width: 560px) {
+  .app-header-inner {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 14px 16px;
+  }
+
+  .app-nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .dashboard,
+  .capture-page,
+  .result-page {
+    padding: 28px 16px 56px;
+  }
+
+  .tab-bar {
+    overflow-x: auto;
+  }
+
+  .tab-button {
+    flex: 1 0 auto;
+    white-space: nowrap;
+  }
+
+  .food-item-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px 12px;
+  }
+
+  .manual-barcode-row {
+    flex-direction: column;
+  }
 }
 
 .result-error-banner {

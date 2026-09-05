@@ -87,11 +87,15 @@ export default function ManualSearch({
         onChange={(e) => setQuery(e.target.value)}
       />
 
-      {loading && <p className="scanner-status">Searching…</p>}
-      {error && <div className="form-error">{error}</div>}
+      {loading && <p className="search-loading">Searching the food database…</p>}
+      {error && (
+        <div className="form-error" role="alert">
+          <strong>Search unavailable.</strong> {error}
+        </div>
+      )}
       {showEmptyState && (
-        <p style={{ color: "var(--muted)", fontSize: 14 }}>
-          No matches yet — try a different search.
+        <p className="search-empty">
+          No matches for “{query.trim()}”. Try a broader food or brand name.
         </p>
       )}
 

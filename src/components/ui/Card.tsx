@@ -11,12 +11,10 @@ interface CardProps {
 // generic soft-shadowed SaaS card.
 const cardStyle: CSSProperties = {
   background: "var(--panel)",
-  borderTop: "4px solid var(--ink)",
-  borderBottom: "1px solid var(--line)",
-  borderLeft: "1px solid var(--line)",
-  borderRight: "1px solid var(--line)",
+  border: "1px solid var(--line)",
+  borderTop: "4px solid var(--line-strong)",
   borderRadius: "var(--radius)",
-  padding: "28px 28px 24px",
+  padding: "24px",
   width: "100%",
   maxWidth: 400,
   boxShadow: "none",

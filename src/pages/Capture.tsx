@@ -77,8 +77,8 @@ export default function Capture() {
     <>
       <AppHeader />
       <div className="capture-page">
-      <h1 style={{ marginBottom: 4 }}>Scan a food item</h1>
-      <p style={{ marginTop: 0, color: "var(--ink-soft)" }}>
+      <h1 className="capture-title">Scan a food item</h1>
+      <p className="capture-intro">
         Scan a barcode, upload a nutrition label, or search manually.
       </p>
 
@@ -97,7 +97,7 @@ export default function Capture() {
         ))}
       </div>
 
-      <Card style={{ maxWidth: "none", width: "100%", marginTop: 16 }}>
+      <Card className="capture-tool-card" style={{ maxWidth: "none", width: "100%", marginTop: 16 }}>
         {activeTab === "barcode" && (
           <Suspense
             fallback={<p className="scanner-status">Loading scanner…</p>}
@@ -117,42 +117,43 @@ export default function Capture() {
       </Card>
 
       {resolvedItem && (
-        <Card style={{ maxWidth: "none", width: "100%", marginTop: 16 }}>
-          <h2 style={{ marginTop: 0, fontSize: 16 }}>{resolvedItem.name}</h2>
+        <Card className="resolved-item-card" style={{ maxWidth: "none", width: "100%", marginTop: 16 }}>
+          <p className="eyebrow">Selected item</p>
+          <h2 className="resolved-item-name">{resolvedItem.name}</h2>
           {resolvedItem.brand && (
-            <p style={{ margin: "0 0 12px", color: "var(--ink-soft)", fontSize: 13 }}>
+            <p className="resolved-item-brand">
               {resolvedItem.brand}
             </p>
           )}
 
           <div className="food-item-stats">
-            <div>
-              <span className="stat-value">
+            <div className="food-stat">
+              <span className="food-stat-value">
                 {resolvedItem.calories_per_serving}
               </span>
               <span className="stat-label">Calories</span>
             </div>
-            <div>
-              <span className="stat-value">{resolvedItem.sodium_mg} mg</span>
-              <span className="stat-label">Sodium</span>
+            <div className="food-stat">
+              <span className="food-stat-value">{resolvedItem.sodium_mg} mg</span>
+              <span className="food-stat-label">Sodium</span>
             </div>
-            <div>
-              <span className="stat-value">{resolvedItem.added_sugars_g} g</span>
-              <span className="stat-label">Added sugar</span>
+            <div className="food-stat">
+              <span className="food-stat-value">{resolvedItem.added_sugars_g} g</span>
+              <span className="food-stat-label">Added sugar</span>
             </div>
-            <div>
-              <span className="stat-value">{resolvedItem.saturated_fat_g} g</span>
-              <span className="stat-label">Sat. fat</span>
+            <div className="food-stat">
+              <span className="food-stat-value">{resolvedItem.saturated_fat_g} g</span>
+              <span className="food-stat-label">Sat. fat</span>
             </div>
           </div>
 
           {resolvedItem.ingredients_list.length > 0 && (
-            <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 12 }}>
+            <p className="ingredients-note">
               Ingredients: {resolvedItem.ingredients_list.join(", ")}
             </p>
           )}
 
-          <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+          <div className="resolved-item-actions">
             <button
               type="button"
               className="btn-secondary"

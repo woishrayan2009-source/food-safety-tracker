@@ -265,7 +265,7 @@ export default function Result() {
       <div className="result-page">
       <Card style={{ maxWidth: "none", width: "100%" }}>
         {foodName && (
-          <h1 className="result-food-name" style={{ marginTop: 0 }}>
+          <h1 className="result-food-name">
             {foodName}
           </h1>
         )}
@@ -274,9 +274,10 @@ export default function Result() {
           <p className="result-error-banner">{fatalError}</p>
         ) : riskLevel ? (
           <>
-            <span className={`risk-badge-large risk-${riskLevel}`}>
-              {RISK_LABELS[riskLevel]}
-            </span>
+            <div className={`result-verdict risk-${riskLevel}`}>
+              <p className="eyebrow">Safety assessment</p>
+              <span className="risk-badge-large">{RISK_LABELS[riskLevel]}</span>
+            </div>
 
             {explanationNote && (
               <p className="result-explanation-fallback-note">{explanationNote}</p>
@@ -321,8 +322,8 @@ export default function Result() {
           This is informational and not a substitute for medical advice.
         </p>
 
-        <p style={{ marginBottom: 0, marginTop: 20 }}>
-          <Link to="/dashboard" style={{ color: "var(--brand)", fontSize: 14 }}>
+        <p className="result-back-link">
+          <Link to="/dashboard">
             ← Back to dashboard
           </Link>
         </p>
