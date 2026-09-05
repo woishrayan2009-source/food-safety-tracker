@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 type PageLoadingContextValue = {
   pendingCount: number;
@@ -11,15 +10,9 @@ export const PageLoadingContext = createContext<PageLoadingContextValue | null>(
 );
 
 export function PageLoadingProvider({ children }: { children: React.ReactNode }) {
-  const { pathname } = useLocation();
   const pendingOperations = useRef(new Set<number>());
   const nextOperationId = useRef(0);
   const [pendingCount, setPendingCount] = useState(0);
-
-  useEffect(() => {
-    pendingOperations.current.clear();
-    setPendingCount(0);
-  }, [pathname]);
 
   const register = useCallback(() => {
     const operationId = nextOperationId.current++;
