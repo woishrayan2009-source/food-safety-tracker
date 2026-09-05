@@ -250,7 +250,14 @@ export default function Settings() {
 
       // The account (and its session) no longer exists server-side — clear the local
       // session too and send them to a logged-out screen.
-      await signOut();
+      try {
+        // Supabase may return the expected post-deletion 403 as an error result,
+        // and an unexpected rejection should not block the redirect either.
+        await signOut();
+      } catch {
+        // The account was just deleted server-side, so there may be no session left
+        // to sign out of. Safe to ignore.
+      }
       navigate("/signup");
     } catch {
       setDeleteError("Network error — please try again.");
