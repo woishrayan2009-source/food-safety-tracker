@@ -1,3 +1,9 @@
+// REDESIGN NOTES (Onboarding):
+// - Added the same .auth-wordmark treatment as Login/Signup, as a plain
+//   <span> instead of a <Link> since there's nowhere useful to navigate to
+//   mid-onboarding.
+// - Progress track/labels and step nav buttons are unchanged in markup —
+//   they pick up the new flat, square-cornered look purely from index.css.
 import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
@@ -132,11 +138,15 @@ export default function Onboarding() {
 
   return (
     <div className="page-center">
-      <Card style={{ maxWidth: 480 }}>
+      <div className="auth-wrap">
+        <span className="auth-wordmark">
+          Food Safety <span>Tracker</span>
+        </span>
+        <Card style={{ maxWidth: 480 }}>
         <h1 style={{ marginTop: 0, marginBottom: 4 }}>
           Set up your health profile
         </h1>
-        <p style={{ marginTop: 0, color: "var(--muted)", fontSize: 14 }}>
+        <p style={{ marginTop: 0, color: "var(--ink-soft)", fontSize: 14 }}>
           This helps us flag foods that aren't safe for you.
         </p>
 
@@ -226,7 +236,8 @@ export default function Onboarding() {
             )}
           </div>
         </form>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
