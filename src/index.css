@@ -19,6 +19,8 @@
   --brand: #176b5a;
   --brand-hover: #105344;
   --brand-tint: #e2f0ea;
+  --info: #2563eb;
+  --info-tint: #eaf2ff;
 
   /* Risk semantics — each level has its own readable accent. */
   --risk-low: #1f6f43;
@@ -403,6 +405,57 @@ a {
   border-radius: 0;
   font-size: 13px;
   margin-bottom: 18px;
+}
+
+.info-banner {
+  background: var(--info-tint);
+  border-left: 4px solid var(--info);
+  color: var(--info);
+  padding: 11px 14px;
+  border-radius: 0;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.info-banner-action,
+.info-banner-dismiss {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--info);
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.info-banner-action {
+  margin-top: 8px;
+  margin-right: 12px;
+}
+
+.info-banner-action:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.info-banner-feedback {
+  display: inline-block;
+  margin-top: 8px;
+  margin-right: 12px;
+}
+
+.info-banner-dismiss {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.info-banner-action:focus-visible,
+.info-banner-dismiss:focus-visible {
+  outline: 2px solid var(--info);
+  outline-offset: 3px;
 }
 
 .auth-switch {

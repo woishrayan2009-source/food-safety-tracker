@@ -4,7 +4,7 @@
 //   mid-onboarding.
 // - Progress track/labels and step nav buttons are unchanged in markup —
 //   they pick up the new flat, square-cornered look purely from index.css.
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -15,6 +15,7 @@ import ConditionsAllergiesStep from "../components/profile/ConditionsAllergiesSt
 import GoalsStep from "../components/profile/GoalsStep";
 import { toggleInList } from "../components/profile/constants";
 import { getCurrentUser } from "../lib/auth";
+import { usePageLoading } from "../lib/pageLoading";
 import type {
   UserProfile,
   Gender,
@@ -27,6 +28,8 @@ const STEP_LABELS = ["Basic Info", "Conditions & Allergies", "Goals"];
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const done = usePageLoading();
+  const [authChecked, setAuthChecked] = useState(false);
 
   const [step, setStep] = useState(0);
 
@@ -50,6 +53,25 @@ export default function Onboarding() {
 
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const user = await getCurrentUser();
+        if (!user) {
+          navigate("/login");
+          return;
+        }
+        setAuthChecked(true);
+      } finally {
+        done();
+      }
+    }
+
+    checkSession().catch(() => {
+      navigate("/login");
+    });
+  }, []);
 
   function validateStepOne(): boolean {
     const errors: BasicInfoErrors = {};
@@ -135,6 +157,14 @@ export default function Onboarding() {
   }
 
   const progressPct = ((step + 1) / STEP_LABELS.length) * 100;
+
+  if (!authChecked) {
+    return (
+      <div className="page-center">
+        <p style={{ color: "var(--ink-soft)" }}>Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="page-center">

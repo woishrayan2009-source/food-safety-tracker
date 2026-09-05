@@ -63,8 +63,7 @@ export default function Signup() {
       return;
     }
 
-    // New users must complete their health profile before using the app.
-    navigate("/onboarding");
+    navigate("/login", { state: { justSignedUp: true, email } });
   }
 
   return (
