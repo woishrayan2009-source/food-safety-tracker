@@ -14,10 +14,9 @@
 
 import { randomUUID } from "node:crypto";
 
-// TODO (manual): sign up for Google Cloud Vision (or swap in AWS Textract / Azure CV) and put
-// the key in OCR_API_KEY. This function currently has a placeholder fetch call — replace the
-// placeholder endpoint/request body below with your chosen provider's actual OCR contract.
-const OCR_API_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate";
+// Using OCR.space (https://ocr.space/ocrapi) — free tier, no Google Cloud project/billing
+// required. OCR_API_KEY should be the key from your OCR.space signup email.
+const OCR_API_ENDPOINT = "https://api.ocr.space/parse/imageurl";
 
 const AI_API_ENDPOINT = "https://api.anthropic.com/v1/messages";
 const AI_MODEL = "claude-sonnet-4-6";
@@ -74,35 +73,38 @@ async function extractTextFromImage(imageUrl) {
     throw new Error("Missing OCR_API_KEY in the function's environment.");
   }
 
-  // Placeholder request — this is Google Cloud Vision's request shape as an example;
-  // swap in your chosen provider's actual endpoint/payload once OCR_API_KEY is configured.
-  const res = await fetch(`${OCR_API_ENDPOINT}?key=${ocrApiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      requests: [
-        {
-          image: { source: { imageUri: imageUrl } },
-          features: [{ type: "TEXT_DETECTION" }],
-        },
-      ],
-    }),
+  // OCR.space's imageurl endpoint takes the image URL + api key as query params (GET-style,
+  // though POST with query params works fine too and avoids URL-length edge cases).
+  const params = new URLSearchParams({
+    apikey: ocrApiKey,
+    url: imageUrl,
+    OCREngine: "2", // engine 2 tends to do better on structured/tabular label text
+    isOverlayRequired: "false",
+    scale: "true",
+  });
+
+  const res = await fetch(`${OCR_API_ENDPOINT}?${params.toString()}`, {
+    method: "GET",
   });
 
   if (!res.ok) {
-    // TEMP DEBUG: log Google's actual error body so we can see *why* the request was
-    // rejected (bad key, API not enabled, unreachable imageUri, etc.) instead of just the
-    // status code. Safe to remove once OCR is confirmed working end-to-end.
     const errorBody = await res.text();
     console.error("parse-label: OCR error body —", errorBody);
     throw new Error(`OCR request failed with status ${res.status}`);
   }
 
   const data = await res.json();
-  const rawText =
-    data?.responses?.[0]?.fullTextAnnotation?.text ??
-    data?.responses?.[0]?.textAnnotations?.[0]?.description ??
-    "";
+
+  // OCR.space returns 200 even for some internal failures — check its own error flag too.
+  if (data.IsErroredOnProcessing) {
+    const message = Array.isArray(data.ErrorMessage)
+      ? data.ErrorMessage.join("; ")
+      : data.ErrorMessage || "Unknown OCR.space processing error.";
+    console.error("parse-label: OCR.space reported an error —", message);
+    throw new Error(`OCR.space processing error: ${message}`);
+  }
+
+  const rawText = data?.ParsedResults?.[0]?.ParsedText ?? "";
 
   return rawText;
 }
