@@ -1032,14 +1032,32 @@ a {
   color: currentColor;
 }
 
-.result-back-link {
+.btn-outline-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin: var(--space-5) 0 0;
+  border: 2px solid var(--brand);
+  background: transparent;
+  color: var(--brand);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
-.result-back-link a {
-  color: var(--brand);
-  font-size: 14px;
-  font-weight: 600;
+.btn-outline-back:hover,
+.btn-outline-back:focus-visible {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+.btn-outline-back:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
 }
 
 @keyframes verdict-enter {

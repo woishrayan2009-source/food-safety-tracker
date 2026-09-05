@@ -230,11 +230,9 @@ export default function Result() {
             once the session ends, and a history entry may have been deleted —
             try scanning it again.
           </p>
-          <p style={{ marginBottom: 0, marginTop: 20 }}>
-            <Link to="/dashboard" style={{ color: "var(--brand)", fontSize: 14 }}>
-              ← Back to dashboard
-            </Link>
-          </p>
+          <Link to="/dashboard" className="btn-outline-back">
+            ← Back to dashboard
+          </Link>
         </Card>
         </div>
       </>
@@ -331,11 +329,9 @@ export default function Result() {
           This is informational and not a substitute for medical advice.
         </p>
 
-        <p className="result-back-link">
-          <Link to="/dashboard">
-            ← Back to dashboard
-          </Link>
-        </p>
+        <Link to="/dashboard" className="btn-outline-back">
+          ← Back to dashboard
+        </Link>
       </Card>
       </div>
     </>
