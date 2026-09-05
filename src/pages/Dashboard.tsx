@@ -1,7 +1,15 @@
+// REDESIGN NOTES (Dashboard):
+// - Added <AppHeader /> for persistent nav; removed the page's own Settings
+//   link + "Scan a food item" button since AppHeader now owns those.
+// - "This week" and "Recent scans" headings use .panel-title / .section-header-row,
+//   which render the nutrition-label-style thick rule underneath.
+// - Stat rows switched from a 2-col grid of boxed cards to ruled rows
+//   (.summary-grid / .stat-box now stack with a hairline border-bottom).
+// - Dropped the emoji in the greeting to match the app's plainer, label-like voice.
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
+import AppHeader from "../components/AppHeader";
 import { getCurrentUser } from "../lib/auth";
 import { getProfile } from "../lib/profile";
 import { getRecentScans } from "../lib/foodLogs";
@@ -98,7 +106,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="page-center">
-        <p style={{ color: "var(--muted)" }}>Loading your dashboard…</p>
+        <p style={{ color: "var(--ink-soft)" }}>Loading your dashboard…</p>
       </div>
     );
   }
@@ -116,26 +124,20 @@ export default function Dashboard() {
   const sugarOverLimit = summary.sugarTotal > thresholds.sugarLimitG;
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
-        <div>
-          <h1 style={{ margin: 0 }}>Hi, {profile?.name ?? "there"} 👋</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
-            Here's how your week is looking.
-          </p>
+    <>
+      <AppHeader />
+      <div className="dashboard">
+        <div className="dashboard-header">
+          <div>
+            <h1 style={{ margin: 0 }}>Hi, {profile?.name ?? "there"}</h1>
+            <p style={{ margin: "4px 0 0", color: "var(--ink-soft)" }}>
+              Here's how your week is looking.
+            </p>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <Link to="/settings" style={{ color: "var(--accent)", fontSize: 14 }}>
-            Settings
-          </Link>
-          <Link to="/capture" style={{ textDecoration: "none" }}>
-            <Button style={{ width: "auto" }}>Scan a food item</Button>
-          </Link>
-        </div>
-      </div>
 
       <Card style={{ maxWidth: "none", width: "100%", marginTop: 24 }}>
-        <h2 style={{ marginTop: 0, fontSize: 16 }}>This week</h2>
+        <h2 className="panel-title">This week</h2>
 
         <div className="summary-grid">
           <div className="stat-box">
@@ -175,14 +177,14 @@ export default function Dashboard() {
 
       <Card style={{ maxWidth: "none", width: "100%", marginTop: 16 }}>
         <div className="section-header-row">
-          <h2 style={{ margin: 0, fontSize: 16 }}>Recent scans</h2>
-          <Link to="/history" style={{ color: "var(--accent)", fontSize: 13 }}>
+          <h2 className="panel-title">Recent scans</h2>
+          <Link to="/history" style={{ color: "var(--brand)", fontSize: 13, fontWeight: 600 }}>
             View all →
           </Link>
         </div>
 
         {recentScans.length === 0 ? (
-          <p style={{ color: "var(--muted)", fontSize: 14 }}>
+          <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>
             No scans yet — scan a food item to get started.
           </p>
         ) : (
@@ -204,6 +206,7 @@ export default function Dashboard() {
       <Link to="/suggestions" className="checkin-link">
         This week's AI check-in →
       </Link>
-    </div>
+      </div>
+    </>
   );
 }
