@@ -1,3 +1,7 @@
+// REDESIGN NOTES (Login):
+// - No <AppHeader /> here on purpose — there's nothing to navigate to yet
+//   pre-auth. Instead, added a small .auth-wordmark above the card so the
+//   brand still shows up on this screen, wrapped in a new .auth-wrap div.
 import { useState, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { signIn } from "../lib/auth";
@@ -57,9 +61,13 @@ export default function Login() {
 
   return (
     <div className="page-center">
-      <Card>
+      <div className="auth-wrap">
+        <Link to="/login" className="auth-wordmark">
+          Food Safety <span>Tracker</span>
+        </Link>
+        <Card>
         <h1 style={{ marginTop: 0, marginBottom: 4 }}>Welcome back</h1>
-        <p style={{ marginTop: 0, color: "var(--muted)", fontSize: 14 }}>
+        <p style={{ marginTop: 0, color: "var(--ink-soft)", fontSize: 14 }}>
           Log in to check what's safe for you to eat.
         </p>
 
@@ -102,7 +110,8 @@ export default function Login() {
         <div className="auth-switch">
           Don't have an account? <Link to="/signup">Sign up</Link>
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
