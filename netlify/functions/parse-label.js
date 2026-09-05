@@ -172,6 +172,9 @@ ${rawText}
   try {
     return JSON.parse(cleaned);
   } catch {
+    // TEMP DEBUG: log what Gemini actually sent back when it isn't valid JSON at all —
+    // helps distinguish "wrong shape" from "not JSON" failures.
+    console.warn("parse-label: Gemini response wasn't valid JSON —", cleaned);
     return null;
   }
 }
@@ -231,6 +234,12 @@ export const handler = async (event) => {
   }
 
   if (!isValidFoodItem(candidate)) {
+    // TEMP DEBUG: log what Gemini actually returned so we can see why it didn't match the
+    // expected FoodItem shape (wrong field names, strings instead of numbers, etc.).
+    console.warn(
+      "parse-label: AI output failed validation —",
+      JSON.stringify(candidate)
+    );
     // AI output didn't match the expected shape — let the frontend fall back to manual entry,
     // pre-filled with whatever raw text OCR did manage to extract.
     return { statusCode: 200, body: JSON.stringify({ found: false, rawText }) };
