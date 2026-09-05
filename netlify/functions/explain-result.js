@@ -154,7 +154,7 @@ async function generateAiExplanation(foodName, riskLevel, triggeredRules) {
             ],
           },
         ],
-        generationConfig: { maxOutputTokens: 500 },
+        generationConfig: { maxOutputTokens: 1500 },
       }),
     });
   } catch (err) {
