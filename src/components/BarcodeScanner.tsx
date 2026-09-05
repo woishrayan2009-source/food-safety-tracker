@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import type { FoodItem } from "../types";
 
@@ -18,6 +19,7 @@ export default function BarcodeScanner({
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [status, setStatus] = useState<ScanStatus>("starting");
   const [error, setError] = useState<string | null>(null);
+  const [manualCode, setManualCode] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +35,7 @@ export default function BarcodeScanner({
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 250, height: 150 } },
         (decodedText) => {
-          if (!cancelled) handleDecoded(decodedText);
+          if (!cancelled) lookupCode(decodedText, { fromCamera: true });
         },
         () => {
           // Per-frame "nothing found this frame" callback — expected while the user is
@@ -48,7 +50,7 @@ export default function BarcodeScanner({
         console.error("BarcodeScanner: failed to start camera", err);
         setStatus("error");
         setError(
-          "Couldn't access the camera. Check camera permissions and that you're on HTTPS."
+          "Couldn't access the camera. Check camera permissions and that you're on HTTPS, or enter the barcode number below instead."
         );
       });
 
@@ -64,12 +66,22 @@ export default function BarcodeScanner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleDecoded(code: string) {
-    const scanner = scannerRef.current;
-    try {
-      scanner?.pause(true);
-    } catch {
-      /* already paused/stopped */
+  /**
+   * Shared lookup path for both the camera decode callback and manual entry submit, so a
+   * barcode found either way behaves identically. `fromCamera` controls whether we pause/
+   * resume the live camera scanner around the lookup — irrelevant (and harmless to skip) for
+   * a manually typed code.
+   */
+  async function lookupCode(code: string, { fromCamera }: { fromCamera: boolean }) {
+    const trimmed = code.trim();
+    if (!trimmed) return;
+
+    if (fromCamera) {
+      try {
+        scannerRef.current?.pause(true);
+      } catch {
+        /* already paused/stopped */
+      }
     }
 
     setStatus("looking-up");
@@ -77,21 +89,19 @@ export default function BarcodeScanner({
 
     try {
       const res = await fetch(
-        `/.netlify/functions/lookup-barcode?code=${encodeURIComponent(code)}`
+        `/.netlify/functions/lookup-barcode?code=${encodeURIComponent(trimmed)}`
       );
       const data = await res.json();
-
       if (!res.ok || !data.found) {
         onNotFound();
         return;
       }
-
       onResolved(data.item as FoodItem);
     } catch (err) {
       console.error("BarcodeScanner: barcode lookup failed", err);
       setStatus("error");
       setError("Couldn't look up that barcode. Try again or use another tab.");
-      resumeScanning();
+      if (fromCamera) resumeScanning();
     }
   }
 
@@ -102,6 +112,12 @@ export default function BarcodeScanner({
     } catch {
       /* scanner not in a resumable state — leave it as-is */
     }
+  }
+
+  function handleManualSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!manualCode.trim() || status === "looking-up") return;
+    lookupCode(manualCode, { fromCamera: false });
   }
 
   return (
@@ -118,6 +134,30 @@ export default function BarcodeScanner({
         <p className="scanner-status">Looking up that barcode…</p>
       )}
       {error && <div className="form-error">{error}</div>}
+
+      <form className="manual-barcode-form" onSubmit={handleManualSubmit}>
+        <label htmlFor="manual-barcode-input" className="manual-barcode-label">
+          Camera not cooperating? Enter the barcode number instead.
+        </label>
+        <div className="manual-barcode-row">
+          <input
+            id="manual-barcode-input"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="e.g. 8901058851716"
+            value={manualCode}
+            onChange={(e) => setManualCode(e.target.value)}
+            disabled={status === "looking-up"}
+          />
+          <button
+            type="submit"
+            disabled={status === "looking-up" || !manualCode.trim()}
+          >
+            {status === "looking-up" ? "Looking up…" : "Look up"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
