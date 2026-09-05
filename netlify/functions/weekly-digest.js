@@ -148,7 +148,7 @@ async function generateAiDigest(summary) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ parts: [{ text: buildDigestPrompt(summary) }] }],
-        generationConfig: { maxOutputTokens: 300 },
+        generationConfig: { maxOutputTokens: 1200 },
       }),
     });
   } catch (err) {
