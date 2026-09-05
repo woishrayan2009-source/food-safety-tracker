@@ -1,7 +1,16 @@
+// REDESIGN NOTES (Settings):
+// - Added <AppHeader />, removed the page's own back-link and the unused
+//   `Link` import that went with it.
+// - Section headings ("Health profile", "Export my data") now use
+//   .panel-title for the ruled-underline treatment.
+// - "Danger zone" heading keeps its red color but now also colors the rule
+//   itself (borderBottomColor) so the warning reads through the whole header,
+//   not just the text.
 import { useEffect, useState, FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import AppHeader from "../components/AppHeader";
 import BasicInfoStep, {
   BasicInfoErrors,
 } from "../components/profile/BasicInfoStep";
@@ -246,7 +255,7 @@ export default function Settings() {
   if (loading) {
     return (
       <div className="page-center">
-        <p style={{ color: "var(--muted)" }}>Loading your profile…</p>
+        <p style={{ color: "var(--ink-soft)" }}>Loading your profile…</p>
       </div>
     );
   }
@@ -260,21 +269,20 @@ export default function Settings() {
   }
 
   return (
-    <div className="dashboard">
+    <>
+      <AppHeader />
+      <div className="dashboard">
       <div className="dashboard-header">
         <div>
           <h1 style={{ margin: 0 }}>Settings</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
+          <p style={{ margin: "4px 0 0", color: "var(--ink-soft)" }}>
             Update your health profile, export your data, or delete your account.
           </p>
         </div>
-        <Link to="/dashboard" style={{ color: "var(--accent)", fontSize: 14 }}>
-          ← Back to dashboard
-        </Link>
       </div>
 
       <Card style={{ maxWidth: "none", width: "100%", marginTop: 24 }}>
-        <h2 style={{ marginTop: 0, fontSize: 16 }}>Health profile</h2>
+        <h2 className="panel-title">Health profile</h2>
 
         {saveSuccess && <div className="success-banner">Your profile has been updated.</div>}
         {formError && <div className="form-error">{formError}</div>}
@@ -331,8 +339,8 @@ export default function Settings() {
       </Card>
 
       <Card style={{ maxWidth: "none", width: "100%", marginTop: 16 }}>
-        <h2 style={{ marginTop: 0, fontSize: 16 }}>Export my data</h2>
-        <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 0 }}>
+        <h2 className="panel-title">Export my data</h2>
+        <p style={{ color: "var(--ink-soft)", fontSize: 13, marginTop: 0 }}>
           Download everything this app stores about you — your health profile and your full
           scan history — as a single JSON file.
         </p>
@@ -351,8 +359,10 @@ export default function Settings() {
         style={{ maxWidth: "none", width: "100%", marginTop: 16 }}
         className="danger-zone"
       >
-        <h2 style={{ marginTop: 0, fontSize: 16, color: "var(--danger)" }}>Danger zone</h2>
-        <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 0 }}>
+        <h2 className="panel-title" style={{ color: "var(--danger)", borderBottomColor: "var(--danger)" }}>
+          Danger zone
+        </h2>
+        <p style={{ color: "var(--ink-soft)", fontSize: 13, marginTop: 0 }}>
           Permanently deletes your account, health profile, and full scan history. This
           cannot be undone.
         </p>
@@ -371,7 +381,7 @@ export default function Settings() {
             <h2 style={{ marginTop: 0, fontSize: 16, color: "var(--danger)" }}>
               Delete your account?
             </h2>
-            <p style={{ color: "var(--muted)", fontSize: 14 }}>
+            <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>
               This permanently deletes your account, health profile, and every scan in your
               history. This cannot be undone.
             </p>
@@ -415,6 +425,7 @@ export default function Settings() {
           </Card>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
