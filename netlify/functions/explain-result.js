@@ -28,6 +28,18 @@
 // Also add RLS policies so a user can only select/insert their own rows (auth.uid() = user_id).
 // Until this exists, this function still returns a real explanation, it just can't save the
 // entry (see the try/catch around the Supabase insert below).
+//
+// FIX (Sept 2026): the AI call was causing 504 Gateway Timeouts on the Result page. Root cause
+// was two-fold, addressed below in generateAiExplanation():
+//   1. Gemini 3.6 Flash defaults to "medium" thinking, which adds real latency to what should
+//      be a near-instant templated rewrite of already-decided rule messages. We don't need
+//      reasoning here — risk-check.js made every decision already — so thinking is turned down
+//      to "minimal" via generationConfig.thinkingConfig.
+//   2. The fetch had no timeout, so a slow/hung AI call could drag the whole function past
+//      Netlify's default 10s synchronous function limit, surfacing as an opaque 504 at the
+//      gateway instead of the graceful fallback this function was designed to have. An
+//      AbortController now caps the AI call at 6s, leaving headroom to still return the
+//      deterministic fallback explanation well inside the limit.
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -35,6 +47,11 @@ import { createClient } from "@supabase/supabase-js";
 // the request body — see the API key appended as a query param in generateAiExplanation().
 const AI_API_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
+
+// How long we'll wait on the AI call before giving up and falling back to
+// buildFallbackExplanation(). Kept comfortably under Netlify's 10s default function timeout so
+// there's still time left to attempt the Supabase log write afterward.
+const AI_REQUEST_TIMEOUT_MS = 6000;
 
 const VALID_RISK_LEVELS = ["low", "moderate", "high", "critical"];
 
@@ -132,7 +149,7 @@ Return ONLY a single JSON object — no prose, no markdown code fences — match
  * Calls the AI API and returns { explanation, alternatives }, or null if the call failed or
  * the response didn't match the expected shape. Callers should fall back to a deterministic
  * explanation built directly from triggeredRules when this returns null, so a missing/invalid
- * AI_API_KEY or a flaky API never breaks the Result page.
+ * AI_API_KEY, a flaky API, or a slow/timed-out request never breaks the Result page.
  */
 async function generateAiExplanation(foodName, riskLevel, triggeredRules) {
   const aiApiKey = process.env.AI_API_KEY;
@@ -140,6 +157,11 @@ async function generateAiExplanation(foodName, riskLevel, triggeredRules) {
     console.warn("explain-result: missing AI_API_KEY, using fallback explanation.");
     return null;
   }
+
+  // Abort the request if it runs long, rather than letting it drag the whole function toward
+  // Netlify's gateway timeout (which surfaces as an opaque 504 instead of our own fallback).
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
 
   let res;
   try {
@@ -154,12 +176,28 @@ async function generateAiExplanation(foodName, riskLevel, triggeredRules) {
             ],
           },
         ],
-        generationConfig: { maxOutputTokens: 1500 },
+        generationConfig: {
+          maxOutputTokens: 1500,
+          // This task is a templated rewrite of a decision the rule engine already made —
+          // it needs no reasoning. Gemini 3.6 Flash defaults to "medium" thinking, which was
+          // adding several seconds of latency for no benefit here and was the main driver of
+          // the 504s on the Result page. "minimal" keeps this call fast.
+          thinkingConfig: { thinkingLevel: "minimal" },
+        },
       }),
+      signal: controller.signal,
     });
   } catch (err) {
-    console.error("explain-result: AI request failed —", err.message);
+    if (err.name === "AbortError") {
+      console.error(
+        `explain-result: AI request timed out after ${AI_REQUEST_TIMEOUT_MS}ms.`
+      );
+    } else {
+      console.error("explain-result: AI request failed —", err.message);
+    }
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (!res.ok) {
