@@ -672,3 +672,67 @@ body {
   padding: 10px 14px;
   margin: 12px 0;
 }
+
+/* --- Manual barcode entry (fallback for BarcodeScanner) --- */
+
+.manual-barcode-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.manual-barcode-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.manual-barcode-row {
+  display: flex;
+  gap: 8px;
+}
+
+.manual-barcode-row input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.manual-barcode-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.manual-barcode-row input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.manual-barcode-row button {
+  flex-shrink: 0;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.manual-barcode-row button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.manual-barcode-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
