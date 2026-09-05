@@ -1,7 +1,14 @@
+// REDESIGN NOTES (Capture):
+// - Added <AppHeader /> above the page for consistent nav (this page previously
+//   had no back-link at all, so this also fixes a navigation dead-end).
+// - Tab bar, food-item stat grid, and search results all inherit the new
+//   nutrition-label styling automatically via the shared CSS classes —
+//   no markup changes were needed there.
 import { lazy, Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import AppHeader from "../components/AppHeader";
 import OcrUpload from "../components/OcrUpload";
 import ManualSearch from "../components/ManualSearch";
 import type { FoodItem } from "../types";
@@ -67,9 +74,11 @@ export default function Capture() {
   }
 
   return (
-    <div className="capture-page">
+    <>
+      <AppHeader />
+      <div className="capture-page">
       <h1 style={{ marginBottom: 4 }}>Scan a food item</h1>
-      <p style={{ marginTop: 0, color: "var(--muted)" }}>
+      <p style={{ marginTop: 0, color: "var(--ink-soft)" }}>
         Scan a barcode, upload a nutrition label, or search manually.
       </p>
 
@@ -111,7 +120,7 @@ export default function Capture() {
         <Card style={{ maxWidth: "none", width: "100%", marginTop: 16 }}>
           <h2 style={{ marginTop: 0, fontSize: 16 }}>{resolvedItem.name}</h2>
           {resolvedItem.brand && (
-            <p style={{ margin: "0 0 12px", color: "var(--muted)", fontSize: 13 }}>
+            <p style={{ margin: "0 0 12px", color: "var(--ink-soft)", fontSize: 13 }}>
               {resolvedItem.brand}
             </p>
           )}
@@ -138,7 +147,7 @@ export default function Capture() {
           </div>
 
           {resolvedItem.ingredients_list.length > 0 && (
-            <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 12 }}>
+            <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 12 }}>
               Ingredients: {resolvedItem.ingredients_list.join(", ")}
             </p>
           )}
@@ -162,6 +171,7 @@ export default function Capture() {
           </div>
         </Card>
       )}
-    </div>
+      </div>
+    </>
   );
 }
