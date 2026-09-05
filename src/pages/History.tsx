@@ -1,6 +1,13 @@
+// REDESIGN NOTES (History):
+// - Added <AppHeader /> and removed the page's own "← Back to dashboard" link
+//   (AppHeader's Dashboard nav item covers this, and highlights as active).
+// - No structural changes below this point — History leans entirely on the
+//   shared .dashboard / .history-* classes in index.css, so it inherits the
+//   new look for free (ruled scan rows, sharp-edged risk badges, etc.).
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
+import AppHeader from "../components/AppHeader";
 import { getCurrentUser } from "../lib/auth";
 import { getHistoryPage } from "../lib/foodLogs";
 import type { FoodLogEntry, RiskLevel } from "../types";
@@ -112,17 +119,16 @@ export default function History() {
   const rangeEnd = Math.min(offset + PAGE_SIZE, total);
 
   return (
-    <div className="dashboard">
+    <>
+      <AppHeader />
+      <div className="dashboard">
       <div className="dashboard-header">
         <div>
           <h1 style={{ margin: 0 }}>History</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
+          <p style={{ margin: "4px 0 0", color: "var(--ink-soft)" }}>
             Every item you've scanned, with the verdict from when you scanned it.
           </p>
         </div>
-        <Link to="/dashboard" style={{ color: "var(--accent)", fontSize: 14 }}>
-          ← Back to dashboard
-        </Link>
       </div>
 
       <Card style={{ maxWidth: "none", width: "100%", marginTop: 24 }}>
@@ -174,9 +180,9 @@ export default function History() {
             {loadError}
           </div>
         ) : loading ? (
-          <p style={{ color: "var(--muted)", fontSize: 14 }}>Loading…</p>
+          <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>Loading…</p>
         ) : entries.length === 0 ? (
-          <p style={{ color: "var(--muted)", fontSize: 14 }}>
+          <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>
             No scans match these filters yet.
           </p>
         ) : (
@@ -225,6 +231,7 @@ export default function History() {
           </>
         )}
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
