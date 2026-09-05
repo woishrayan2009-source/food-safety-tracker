@@ -18,8 +18,10 @@ import { randomUUID } from "node:crypto";
 // required. OCR_API_KEY should be the key from your OCR.space signup email.
 const OCR_API_ENDPOINT = "https://api.ocr.space/parse/imageurl";
 
-const AI_API_ENDPOINT = "https://api.anthropic.com/v1/messages";
-const AI_MODEL = "claude-sonnet-4-6";
+// Using Google's Gemini API (generateContent). The model name is part of the URL path, not
+// the request body — see the API key appended as a query param in extractFoodItemFromText().
+const AI_API_ENDPOINT =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 const REQUIRED_FOOD_ITEM_FIELDS = [
   "name",
@@ -144,27 +146,25 @@ OCR text:
 ${rawText}
 """`;
 
-  const res = await fetch(AI_API_ENDPOINT, {
+  const res = await fetch(`${AI_API_ENDPOINT}?key=${aiApiKey}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": aiApiKey,
-      "anthropic-version": "2023-06-01",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: AI_MODEL,
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }],
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 1000 },
     }),
   });
 
   if (!res.ok) {
+    const errorBody = await res.text();
+    console.error("parse-label: Gemini error body —", errorBody);
     throw new Error(`AI request failed with status ${res.status}`);
   }
 
   const data = await res.json();
-  const textBlock = (data.content || []).find((block) => block.type === "text");
-  const rawOutput = (textBlock?.text || "").trim();
+  const rawOutput = (
+    data?.candidates?.[0]?.content?.parts?.[0]?.text || ""
+  ).trim();
 
   // Defensive cleanup in case the model doesn't follow the "no markdown fences" instruction.
   const cleaned = rawOutput.replace(/^```json\s*|^```\s*|```$/gm, "").trim();
