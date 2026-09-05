@@ -1,3 +1,6 @@
+// REDESIGN NOTES (Signup):
+// - Same .auth-wordmark + .auth-wrap treatment as Login.tsx, for consistency
+//   across both pre-auth screens.
 import { useState, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { signUp } from "../lib/auth";
@@ -66,9 +69,13 @@ export default function Signup() {
 
   return (
     <div className="page-center">
-      <Card>
+      <div className="auth-wrap">
+        <Link to="/login" className="auth-wordmark">
+          Food Safety <span>Tracker</span>
+        </Link>
+        <Card>
         <h1 style={{ marginTop: 0, marginBottom: 4 }}>Create your account</h1>
-        <p style={{ marginTop: 0, color: "var(--muted)", fontSize: 14 }}>
+        <p style={{ marginTop: 0, color: "var(--ink-soft)", fontSize: 14 }}>
           Start tracking food that's actually safe for you.
         </p>
 
@@ -127,7 +134,8 @@ export default function Signup() {
         <div className="auth-switch">
           Already have an account? <Link to="/login">Log in</Link>
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
