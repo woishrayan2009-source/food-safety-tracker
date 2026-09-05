@@ -1,10 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { PageLoadingContext } from "../lib/pageLoading";
 
 export default function RouteLoader() {
   const { pathname } = useLocation();
+  const context = useContext(PageLoadingContext);
   const previousPathname = useRef(pathname);
   const [isVisible, setIsVisible] = useState(false);
+  const [minimumElapsed, setMinimumElapsed] = useState(false);
+
+  if (!context) {
+    throw new Error("RouteLoader must be used inside PageLoadingProvider");
+  }
+
+  const { pendingCount } = context;
 
   useEffect(() => {
     if (previousPathname.current === pathname) return;
@@ -13,10 +22,17 @@ export default function RouteLoader() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     setIsVisible(true);
-    const hideLoader = window.setTimeout(() => setIsVisible(false), 550);
+    setMinimumElapsed(false);
+    const minimumTimer = window.setTimeout(() => setMinimumElapsed(true), 300);
 
-    return () => window.clearTimeout(hideLoader);
+    return () => window.clearTimeout(minimumTimer);
   }, [pathname]);
+
+  useEffect(() => {
+    if (isVisible && minimumElapsed && pendingCount === 0) {
+      setIsVisible(false);
+    }
+  }, [isVisible, minimumElapsed, pendingCount]);
 
   if (!isVisible) return null;
 

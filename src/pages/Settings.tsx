@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import AppHeader from "../components/AppHeader";
+import { usePageLoading } from "../lib/pageLoading";
 import BasicInfoStep, {
   BasicInfoErrors,
 } from "../components/profile/BasicInfoStep";
@@ -31,6 +32,7 @@ const DELETE_CONFIRM_PHRASE = "DELETE";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const done = usePageLoading();
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -67,27 +69,31 @@ export default function Settings() {
     let cancelled = false;
 
     async function load() {
-      const user = await getCurrentUser();
-      if (!user) {
-        navigate("/login");
-        return;
-      }
+      try {
+        const user = await getCurrentUser();
+        if (!user) {
+          navigate("/login");
+          return;
+        }
 
-      const profile = await getProfile(user.id);
-      if (!profile) {
-        // Nothing to edit yet — send them through onboarding to create a profile first.
-        navigate("/onboarding");
-        return;
-      }
+        const profile = await getProfile(user.id);
+        if (!profile) {
+          // Nothing to edit yet — send them through onboarding to create a profile first.
+          navigate("/onboarding");
+          return;
+        }
 
-      if (cancelled) return;
-      setName(profile.name);
-      setAge(String(profile.age));
-      setGender(profile.gender);
-      setHealthConditions(profile.health_conditions);
-      setAllergiesIntolerances(profile.allergies_intolerances);
-      setFitnessGoal(profile.fitness_goals);
-      setLoading(false);
+        if (cancelled) return;
+        setName(profile.name);
+        setAge(String(profile.age));
+        setGender(profile.gender);
+        setHealthConditions(profile.health_conditions);
+        setAllergiesIntolerances(profile.allergies_intolerances);
+        setFitnessGoal(profile.fitness_goals);
+        setLoading(false);
+      } finally {
+        done();
+      }
     }
 
     load().catch(() => {

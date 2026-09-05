@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import AppHeader from "../components/AppHeader";
+import { usePageLoading } from "../lib/pageLoading";
 import { getCurrentUser } from "../lib/auth";
 import { supabase } from "../lib/supabaseClient";
 import type { WeeklyDigestResponse } from "../types";
@@ -20,6 +21,7 @@ const REFRESH_COOLDOWN_SECONDS = 60;
 
 export default function Suggestions() {
   const navigate = useNavigate();
+  const done = usePageLoading();
 
   const [digest, setDigest] = useState<string | null>(null);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
@@ -53,23 +55,22 @@ export default function Suggestions() {
     setLoading(true);
     setError(null);
 
-    const user = await getCurrentUser();
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.access_token) {
-      setError("You need to be signed in to see your weekly digest.");
-      setLoading(false);
-      return;
-    }
-
     try {
+      const user = await getCurrentUser();
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        setError("You need to be signed in to see your weekly digest.");
+        return;
+      }
+
       const res = await fetch("/.netlify/functions/weekly-digest", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
@@ -88,11 +89,11 @@ export default function Suggestions() {
   }, [navigate]);
 
   useEffect(() => {
-    fetchDigest();
+    fetchDigest().finally(done);
     // Only run once on mount — fetchDigest is stable enough (only depends on navigate) that
     // re-running it on every render would defeat the point of the cooldown.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [done, fetchDigest]);
 
   return (
     <>

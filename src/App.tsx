@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RouteLoader from "./components/RouteLoader";
+import { PageLoadingProvider } from "./lib/pageLoading";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
@@ -32,19 +33,21 @@ export default function App() {
   // a real <RequireAuth> wrapper around the routes below so it can't be forgotten.
   return (
     <BrowserRouter>
-      <RouteLoader />
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/capture" element={<Capture />} />
-        <Route path="/result/:id" element={<Result />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/suggestions" element={<Suggestions />} />
-        <Route path="/settings" element={<Settings />} />
-      </Routes>
+      <PageLoadingProvider>
+        <RouteLoader />
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/capture" element={<Capture />} />
+          <Route path="/result/:id" element={<Result />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/suggestions" element={<Suggestions />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </PageLoadingProvider>
     </BrowserRouter>
   );
 }

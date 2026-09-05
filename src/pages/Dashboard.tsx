@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import AppHeader from "../components/AppHeader";
+import { usePageLoading } from "../lib/pageLoading";
 import { getCurrentUser } from "../lib/auth";
 import { getProfile } from "../lib/profile";
 import { getRecentScans } from "../lib/foodLogs";
@@ -34,6 +35,7 @@ const RISK_LABELS: Record<FoodLogEntry["risk_level"], string> = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const done = usePageLoading();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [summary, setSummary] = useState<WeeklySummary>(EMPTY_SUMMARY);
@@ -45,34 +47,38 @@ export default function Dashboard() {
     let cancelled = false;
 
     async function load() {
-      const user = await getCurrentUser();
-      if (!user) {
-        navigate("/login");
-        return;
+      try {
+        const user = await getCurrentUser();
+        if (!user) {
+          navigate("/login");
+          return;
+        }
+
+        const userProfile = await getProfile(user.id);
+        if (!userProfile) {
+          // No health profile yet — send them through onboarding first.
+          navigate("/onboarding");
+          return;
+        }
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const [summaryResult, scansResult] = await Promise.all([
+          fetchWeeklySummary(session?.access_token),
+          getRecentScans(user.id, 5),
+        ]);
+
+        if (cancelled) return;
+
+        setProfile(userProfile);
+        setSummary(summaryResult ?? EMPTY_SUMMARY);
+        setRecentScans(scansResult);
+        setLoading(false);
+      } finally {
+        done();
       }
-
-      const userProfile = await getProfile(user.id);
-      if (!userProfile) {
-        // No health profile yet — send them through onboarding first.
-        navigate("/onboarding");
-        return;
-      }
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      const [summaryResult, scansResult] = await Promise.all([
-        fetchWeeklySummary(session?.access_token),
-        getRecentScans(user.id, 5),
-      ]);
-
-      if (cancelled) return;
-
-      setProfile(userProfile);
-      setSummary(summaryResult ?? EMPTY_SUMMARY);
-      setRecentScans(scansResult);
-      setLoading(false);
     }
 
     load().catch(() => {

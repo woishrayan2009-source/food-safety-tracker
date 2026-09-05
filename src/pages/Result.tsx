@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Card from "../components/ui/Card";
 import AppHeader from "../components/AppHeader";
+import { usePageLoading } from "../lib/pageLoading";
 import { getCurrentUser } from "../lib/auth";
 import { getProfile } from "../lib/profile";
 import { getLogEntry } from "../lib/foodLogs";
@@ -44,6 +45,7 @@ type DisplayVerdict = {
 export default function Result() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const done = usePageLoading();
 
   const [phase, setPhase] = useState<Phase>("loading-item");
   const [foodName, setFoodName] = useState<string | null>(null);
@@ -202,12 +204,19 @@ export default function Result() {
       await runHistoryEntry(user.id);
     }
 
-    run();
+    run()
+      .catch(() => {
+        if (!cancelled) {
+          setFatalError("Something went wrong loading this result. Please try again.");
+          setPhase("done");
+        }
+      })
+      .finally(done);
 
     return () => {
       cancelled = true;
     };
-  }, [id, navigate]);
+  }, [done, id, navigate]);
 
   if (phase === "not-found") {
     return (

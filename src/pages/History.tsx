@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import AppHeader from "../components/AppHeader";
+import { usePageLoading } from "../lib/pageLoading";
 import { getCurrentUser } from "../lib/auth";
 import { getHistoryPage } from "../lib/foodLogs";
 import type { FoodLogEntry, RiskLevel } from "../types";
@@ -48,6 +49,7 @@ function formatTimestamp(iso: string): string {
 
 export default function History() {
   const navigate = useNavigate();
+  const done = usePageLoading();
 
   const [entries, setEntries] = useState<FoodLogEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -78,27 +80,31 @@ export default function History() {
     let cancelled = false;
 
     async function load() {
-      setLoading(true);
-      setLoadError(null);
+      try {
+        setLoading(true);
+        setLoadError(null);
 
-      const user = await getCurrentUser();
-      if (!user) {
-        navigate("/login");
-        return;
+        const user = await getCurrentUser();
+        if (!user) {
+          navigate("/login");
+          return;
+        }
+
+        const page = await getHistoryPage(PAGE_SIZE, offset, {
+          riskLevel: riskFilter === "all" ? undefined : riskFilter,
+          // Dates come from <input type="date"> as "YYYY-MM-DD"; treat endDate as end-of-day
+          // so the day the user picks is fully included rather than cut off at midnight.
+          startDate: startDate || undefined,
+          endDate: endDate ? `${endDate}T23:59:59.999` : undefined,
+        });
+
+        if (cancelled) return;
+        setEntries(page.entries);
+        setTotal(page.total);
+        setLoading(false);
+      } finally {
+        done();
       }
-
-      const page = await getHistoryPage(PAGE_SIZE, offset, {
-        riskLevel: riskFilter === "all" ? undefined : riskFilter,
-        // Dates come from <input type="date"> as "YYYY-MM-DD"; treat endDate as end-of-day
-        // so the day the user picks is fully included rather than cut off at midnight.
-        startDate: startDate || undefined,
-        endDate: endDate ? `${endDate}T23:59:59.999` : undefined,
-      });
-
-      if (cancelled) return;
-      setEntries(page.entries);
-      setTotal(page.total);
-      setLoading(false);
     }
 
     load().catch(() => {
