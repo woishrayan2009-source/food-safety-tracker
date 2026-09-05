@@ -31,8 +31,10 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-const AI_API_ENDPOINT = "https://api.anthropic.com/v1/messages";
-const AI_MODEL = "claude-sonnet-4-6";
+// Using Google's Gemini API (generateContent). The model name is part of the URL path, not
+// the request body — see the API key appended as a query param in generateAiExplanation().
+const AI_API_ENDPOINT =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 const VALID_RISK_LEVELS = ["low", "moderate", "high", "critical"];
 
@@ -141,22 +143,18 @@ async function generateAiExplanation(foodName, riskLevel, triggeredRules) {
 
   let res;
   try {
-    res = await fetch(AI_API_ENDPOINT, {
+    res = await fetch(`${AI_API_ENDPOINT}?key=${aiApiKey}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": aiApiKey,
-        "anthropic-version": "2023-06-01",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: AI_MODEL,
-        max_tokens: 500,
-        messages: [
+        contents: [
           {
-            role: "user",
-            content: buildExplanationPrompt(foodName, riskLevel, triggeredRules),
+            parts: [
+              { text: buildExplanationPrompt(foodName, riskLevel, triggeredRules) },
+            ],
           },
         ],
+        generationConfig: { maxOutputTokens: 500 },
       }),
     });
   } catch (err) {
@@ -165,13 +163,15 @@ async function generateAiExplanation(foodName, riskLevel, triggeredRules) {
   }
 
   if (!res.ok) {
-    console.error(`explain-result: AI request failed with status ${res.status}`);
+    const errorBody = await res.text();
+    console.error(`explain-result: AI request failed with status ${res.status} —`, errorBody);
     return null;
   }
 
   const data = await res.json();
-  const textBlock = (data.content || []).find((block) => block.type === "text");
-  const rawOutput = (textBlock?.text || "").trim();
+  const rawOutput = (
+    data?.candidates?.[0]?.content?.parts?.[0]?.text || ""
+  ).trim();
   const cleaned = rawOutput.replace(/^```json\s*|^```\s*|```$/gm, "").trim();
 
   let parsed;
