@@ -90,6 +90,11 @@ async function extractTextFromImage(imageUrl) {
   });
 
   if (!res.ok) {
+    // TEMP DEBUG: log Google's actual error body so we can see *why* the request was
+    // rejected (bad key, API not enabled, unreachable imageUri, etc.) instead of just the
+    // status code. Safe to remove once OCR is confirmed working end-to-end.
+    const errorBody = await res.text();
+    console.error("parse-label: OCR error body —", errorBody);
     throw new Error(`OCR request failed with status ${res.status}`);
   }
 
