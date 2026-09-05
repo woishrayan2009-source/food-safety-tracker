@@ -1,56 +1,77 @@
 // netlify/functions/search-food.js
 //
-// Full-text/fuzzy search against the `food_database` table.
+// Manual food search — queries Open Food Facts's public search API directly, the same
+// provider netlify/functions/lookup-barcode.js already uses for barcode scans. This means
+// Manual Search works immediately with real product data, no local `food_database` table to
+// create or seed, and no separate API key to sign up for (Open Food Facts's API is free and
+// keyless).
 //
-// TODO (manual): this table needs to be seeded — see Prompt 4b for the seed script. It also
-// needs the pg_trgm extension and a trigram index/RPC for fuzzy matching on partial or
-// misspelled queries, e.g. in a Supabase SQL migration:
-//
-//   create extension if not exists pg_trgm;
-//   create index food_database_name_trgm_idx on food_database using gin (name gin_trgm_ops);
-//
-//   create or replace function search_food_database(search_query text, match_limit int)
-//   returns setof food_database as $$
-//     select *
-//     from food_database
-//     where name % search_query
-//     order by similarity(name, search_query) desc
-//     limit match_limit;
-//   $$ language sql stable;
-//
-// Until that RPC exists, this function falls back to a plain ILIKE substring match so the
-// Manual Search tab still works.
-
-import { createClient } from "@supabase/supabase-js";
+// Reuses OPENFOODFACTS_BASE_URL (already set for lookup-barcode.js) to derive the search
+// endpoint's origin, so both functions stay pointed at the same Open Food Facts
+// instance/mirror if that env var ever changes.
 
 const MAX_RESULTS = 20;
 
-function getSupabaseAdmin() {
-  const url = process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRoleKey) {
-    throw new Error("Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.");
-  }
-  return createClient(url, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+function round(n) {
+  return Math.round((Number(n) || 0) * 10) / 10;
 }
 
-function mapRowToFoodItem(row) {
+/**
+ * Maps an Open Food Facts `product` object into our internal FoodItem shape. Mirrors
+ * mapOffProductToFoodItem() in lookup-barcode.js — kept as a separate copy (rather than a
+ * shared import) since these are independent Netlify Functions and this keeps each one
+ * self-contained. Keep the two in sync if the FoodItem shape changes.
+ */
+function mapOffProductToFoodItem(product) {
+  const nutriments = product.nutriments || {};
+
+  const caloriesPerServing =
+    nutriments["energy-kcal_serving"] ?? nutriments["energy-kcal_100g"] ?? 0;
+
+  // Open Food Facts stores sodium in grams; our FoodItem shape wants milligrams.
+  const sodiumG = nutriments["sodium_serving"] ?? nutriments["sodium_100g"] ?? 0;
+
+  const addedSugarsG =
+    nutriments["sugars_serving"] ?? nutriments["sugars_100g"] ?? 0;
+
+  const saturatedFatG =
+    nutriments["saturated-fat_serving"] ?? nutriments["saturated-fat_100g"] ?? 0;
+
+  const transFatG =
+    nutriments["trans-fat_serving"] ?? nutriments["trans-fat_100g"] ?? 0;
+
+  const ingredientsList = (product.ingredients_text || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   return {
-    id: row.id,
-    name: row.name,
-    brand: row.brand || undefined,
-    serving_size: row.serving_size || undefined,
-    calories_per_serving: row.calories_per_serving ?? 0,
-    sodium_mg: row.sodium_mg ?? 0,
-    added_sugars_g: row.added_sugars_g ?? 0,
-    saturated_fat_g: row.saturated_fat_g ?? 0,
-    trans_fat_g: row.trans_fat_g ?? 0,
-    ingredients_list: row.ingredients_list ?? [],
-    product_type: row.product_type,
+    id: product.code || product._id || product.id,
+    name: product.product_name || "Unknown product",
+    brand: product.brands || undefined,
+    barcode: product.code || undefined,
+    serving_size: product.serving_size || undefined,
+    calories_per_serving: round(caloriesPerServing),
+    sodium_mg: round(sodiumG * 1000),
+    added_sugars_g: round(addedSugarsG),
+    saturated_fat_g: round(saturatedFatG),
+    trans_fat_g: round(transFatG),
+    ingredients_list: ingredientsList,
+    product_type: "Packaged Goods",
     source: "manual",
   };
+}
+
+function getOffSearchEndpoint() {
+  const offBaseUrl = process.env.OPENFOODFACTS_BASE_URL;
+  if (!offBaseUrl) {
+    throw new Error("Missing OPENFOODFACTS_BASE_URL in the function's environment.");
+  }
+  // OPENFOODFACTS_BASE_URL is typically "https://world.openfoodfacts.org/api/v0" (used for
+  // barcode lookups) — the search endpoint lives at a different path on the same host, so we
+  // derive the origin rather than hardcoding a second domain.
+  const origin = new URL(offBaseUrl).origin;
+  return `${origin}/cgi/search.pl`;
 }
 
 export const handler = async (event) => {
@@ -66,9 +87,9 @@ export const handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify({ results: [] }) };
   }
 
-  let supabaseAdmin;
+  let searchEndpoint;
   try {
-    supabaseAdmin = getSupabaseAdmin();
+    searchEndpoint = getOffSearchEndpoint();
   } catch (err) {
     console.error("search-food: server misconfigured —", err.message);
     return {
@@ -77,46 +98,40 @@ export const handler = async (event) => {
     };
   }
 
-  const trimmed = q.trim();
+  const params = new URLSearchParams({
+    search_terms: q.trim(),
+    json: "1",
+    page_size: String(MAX_RESULTS),
+    action: "process",
+  });
 
-  // Preferred path: fuzzy trigram search via the search_food_database RPC (see TODO above).
-  const { data: rpcResults, error: rpcError } = await supabaseAdmin.rpc(
-    "search_food_database",
-    { search_query: trimmed, match_limit: MAX_RESULTS }
-  );
-
-  if (!rpcError && rpcResults) {
+  let offResponse;
+  try {
+    offResponse = await fetch(`${searchEndpoint}?${params.toString()}`);
+  } catch (err) {
+    console.error("search-food: Open Food Facts request failed —", err.message);
     return {
-      statusCode: 200,
-      body: JSON.stringify({ results: rpcResults.map(mapRowToFoodItem) }),
+      statusCode: 502,
+      body: JSON.stringify({ error: "Couldn't reach the product database." }),
     };
   }
 
-  if (rpcError) {
-    // Expected until the pg_trgm RPC/migration exists — fall back to substring matching.
-    console.warn(
-      "search-food: trigram RPC unavailable, falling back to ILIKE —",
-      rpcError.message
-    );
-  }
-
-  const { data: fallbackResults, error: fallbackError } = await supabaseAdmin
-    .from("food_database")
-    .select("*")
-    .ilike("name", `%${trimmed}%`)
-    .limit(MAX_RESULTS);
-
-  if (fallbackError) {
-    // Expected until the food_database table is seeded (Prompt 4b) — degrade to no results
-    // rather than erroring, so the tab still renders.
-    console.warn("search-food: food_database query failed —", fallbackError.message);
+  if (!offResponse.ok) {
+    console.warn(`search-food: Open Food Facts responded with status ${offResponse.status}`);
     return { statusCode: 200, body: JSON.stringify({ results: [] }) };
   }
 
+  const offData = await offResponse.json();
+  const products = Array.isArray(offData.products) ? offData.products : [];
+
+  // Skip entries with no usable name — Open Food Facts has plenty of sparse/incomplete
+  // community-submitted products, and a nameless result isn't useful to show or select.
+  const results = products
+    .filter((p) => p.product_name && p.product_name.trim())
+    .map(mapOffProductToFoodItem);
+
   return {
     statusCode: 200,
-    body: JSON.stringify({
-      results: (fallbackResults || []).map(mapRowToFoodItem),
-    }),
+    body: JSON.stringify({ results }),
   };
 };
