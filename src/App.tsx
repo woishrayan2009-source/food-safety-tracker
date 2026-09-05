@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import RouteLoader from "./components/RouteLoader";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
@@ -10,6 +12,16 @@ import Suggestions from "./pages/Suggestions";
 import Settings from "./pages/Settings";
 
 export default function App() {
+  useEffect(() => {
+    const loader = document.getElementById("initial-loader");
+    if (!loader) return;
+
+    loader.classList.add("is-hidden");
+    const removeLoader = window.setTimeout(() => loader.remove(), 400);
+
+    return () => window.clearTimeout(removeLoader);
+  }, []);
+
   // NOTE: there's no centralized auth guard component here — each protected page
   // (Dashboard.tsx, Capture.tsx, Result.tsx, History.tsx, Suggestions.tsx, Settings.tsx,
   // Onboarding.tsx) independently calls getCurrentUser() from src/lib/auth.ts on mount and
@@ -20,6 +32,7 @@ export default function App() {
   // a real <RequireAuth> wrapper around the routes below so it can't be forgotten.
   return (
     <BrowserRouter>
+      <RouteLoader />
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />

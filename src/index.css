@@ -85,10 +85,65 @@ a {
   outline-offset: 2px;
 }
 
+.route-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  animation: route-loader-fade-in 160ms ease-out both;
+}
+
+.route-loader-icon {
+  width: min(180px, 48vw);
+  height: auto;
+  animation: route-loader-pulse 0.9s ease-in-out infinite;
+}
+
+.route-loader-shield {
+  fill: none;
+  stroke: #0f766e;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes route-loader-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes route-loader-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
+  }
+
+  .route-loader {
+    animation: none;
+  }
+
+  .route-loader-icon {
+    animation: none;
   }
 }
 

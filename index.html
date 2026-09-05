@@ -17,8 +17,129 @@
       href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,500;0,600;0,700;0,800;0,900;1,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <style>
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        opacity: 1;
+        transition: opacity 0.35s ease;
+      }
+
+      #initial-loader.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .initial-loader-icon {
+        width: min(180px, 48vw);
+        height: auto;
+      }
+
+      .initial-loader-shield {
+        fill: none;
+        stroke: #0f766e;
+        stroke-width: 6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 1;
+        transition: stroke-dashoffset 0.9s ease;
+      }
+
+      .initial-loader-badge,
+      .initial-loader-check {
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      }
+
+      .initial-loader-icon.is-pulsing {
+        animation: initial-loader-pulse 1.6s ease-in-out infinite;
+      }
+
+      @keyframes initial-loader-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.06); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #initial-loader,
+        #initial-loader.is-hidden,
+        .initial-loader-shield,
+        .initial-loader-badge,
+        .initial-loader-check {
+          transition: none;
+        }
+
+        .initial-loader-shield {
+          stroke-dasharray: none !important;
+          stroke-dashoffset: 0 !important;
+        }
+
+        .initial-loader-badge,
+        .initial-loader-check {
+          opacity: 1;
+        }
+
+        .initial-loader-icon {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="initial-loader" aria-hidden="true">
+      <svg class="initial-loader-icon" viewBox="0 0 240 240" aria-hidden="true">
+        <path
+          class="initial-loader-shield"
+          d="M120 18 L196 46 V112 C196 165 165 202 120 222 C75 202 44 165 44 112 V46 Z"
+        />
+        <circle class="initial-loader-badge" cx="150" cy="150" r="30" fill="#22C55E" />
+        <path
+          class="initial-loader-check"
+          d="M137 150 L146 159 L164 139"
+          fill="none"
+          stroke="#FFFFFF"
+          stroke-width="6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </div>
+    <script>
+      (() => {
+        const loader = document.getElementById("initial-loader");
+        const icon = loader?.querySelector(".initial-loader-icon");
+        const shield = loader?.querySelector(".initial-loader-shield");
+        const badge = loader?.querySelector(".initial-loader-badge");
+        const check = loader?.querySelector(".initial-loader-check");
+
+        if (!loader || !icon || !shield || !badge || !check) return;
+
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (reducedMotion) {
+          badge.setAttribute("style", "opacity: 1");
+          check.setAttribute("style", "opacity: 1");
+          return;
+        }
+
+        const length = shield.getTotalLength();
+        shield.style.strokeDasharray = length;
+        shield.style.strokeDashoffset = length;
+        shield.getBoundingClientRect();
+        shield.style.strokeDashoffset = "0";
+
+        window.setTimeout(() => {
+          badge.style.opacity = "1";
+          check.style.opacity = "1";
+          icon.classList.add("is-pulsing");
+        }, 750);
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
