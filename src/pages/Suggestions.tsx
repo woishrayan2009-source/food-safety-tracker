@@ -1,7 +1,13 @@
+// REDESIGN NOTES (Suggestions):
+// - Added <AppHeader />, removed the page's own back-link and the now-unused
+//   `Link` import.
+// - No other structural changes — the digest text and disclaimer inherit the
+//   new type and rule styling from .result-explanation / .result-disclaimer.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import AppHeader from "../components/AppHeader";
 import { getCurrentUser } from "../lib/auth";
 import { supabase } from "../lib/supabaseClient";
 import type { WeeklyDigestResponse } from "../types";
@@ -89,22 +95,21 @@ export default function Suggestions() {
   }, []);
 
   return (
-    <div className="dashboard">
+    <>
+      <AppHeader />
+      <div className="dashboard">
       <div className="dashboard-header">
         <div>
           <h1 style={{ margin: 0 }}>This week's AI check-in</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
+          <p style={{ margin: "4px 0 0", color: "var(--ink-soft)" }}>
             A short digest of your last 7 days, put together from your logged scans.
           </p>
         </div>
-        <Link to="/dashboard" style={{ color: "var(--accent)", fontSize: 14 }}>
-          ← Back to dashboard
-        </Link>
       </div>
 
       <Card style={{ maxWidth: "none", width: "100%", marginTop: 24 }}>
         {loading ? (
-          <p style={{ color: "var(--muted)", fontSize: 14 }}>
+          <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>
             Putting together your digest…
           </p>
         ) : error ? (
@@ -119,7 +124,7 @@ export default function Suggestions() {
             {generatedAt && (
               <p
                 style={{
-                  color: "var(--muted)",
+                  color: "var(--ink-soft)",
                   fontSize: 12,
                   marginTop: 12,
                   marginBottom: 0,
@@ -152,6 +157,7 @@ export default function Suggestions() {
           and is not a substitute for medical advice.
         </p>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
