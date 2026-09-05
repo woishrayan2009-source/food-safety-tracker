@@ -1,6 +1,14 @@
+// REDESIGN NOTES (Result):
+// - Added <AppHeader /> to all three render branches (not-found, loading,
+//   done) so the nav bar is present no matter which phase the page is in.
+// - Kept the page's own "← Back to dashboard" link as-is (secondary,
+//   in-content navigation is fine alongside the header's primary nav here).
+// - risk-badge-large now renders as an outlined rectangle keyed to risk
+//   color instead of a filled pill — see .risk-badge-large in index.css.
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Card from "../components/ui/Card";
+import AppHeader from "../components/AppHeader";
 import { getCurrentUser } from "../lib/auth";
 import { getProfile } from "../lib/profile";
 import { getLogEntry } from "../lib/foodLogs";
@@ -203,21 +211,24 @@ export default function Result() {
 
   if (phase === "not-found") {
     return (
-      <div className="page-center">
+      <>
+        <AppHeader />
+        <div className="page-center">
         <Card style={{ maxWidth: 480 }}>
           <h1 style={{ marginTop: 0 }}>Result</h1>
-          <p style={{ color: "var(--muted)" }}>
+          <p style={{ color: "var(--ink-soft)" }}>
             We couldn't find that scan. A freshly-scanned item's link expires
             once the session ends, and a history entry may have been deleted —
             try scanning it again.
           </p>
           <p style={{ marginBottom: 0, marginTop: 20 }}>
-            <Link to="/dashboard" style={{ color: "var(--accent)", fontSize: 14 }}>
+            <Link to="/dashboard" style={{ color: "var(--brand)", fontSize: 14 }}>
               ← Back to dashboard
             </Link>
           </p>
         </Card>
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -227,18 +238,21 @@ export default function Result() {
     phase === "generating-explanation"
   ) {
     return (
-      <div className="result-page">
-        <div className="result-loading">
-          <div className="result-spinner" />
-          <p>
-            {phase === "checking-risk"
-              ? "Checking this item against your health profile…"
-              : phase === "generating-explanation"
-              ? "Putting together a plain-language explanation…"
-              : "Loading…"}
-          </p>
+      <>
+        <AppHeader />
+        <div className="result-page">
+          <div className="result-loading">
+            <div className="result-spinner" />
+            <p>
+              {phase === "checking-risk"
+                ? "Checking this item against your health profile…"
+                : phase === "generating-explanation"
+                ? "Putting together a plain-language explanation…"
+                : "Loading…"}
+            </p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -246,7 +260,9 @@ export default function Result() {
   const riskLevel = riskResult?.riskLevel;
 
   return (
-    <div className="result-page">
+    <>
+      <AppHeader />
+      <div className="result-page">
       <Card style={{ maxWidth: "none", width: "100%" }}>
         {foodName && (
           <h1 className="result-food-name" style={{ marginTop: 0 }}>
@@ -306,11 +322,12 @@ export default function Result() {
         </p>
 
         <p style={{ marginBottom: 0, marginTop: 20 }}>
-          <Link to="/dashboard" style={{ color: "var(--accent)", fontSize: 14 }}>
+          <Link to="/dashboard" style={{ color: "var(--brand)", fontSize: 14 }}>
             ← Back to dashboard
           </Link>
         </p>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
