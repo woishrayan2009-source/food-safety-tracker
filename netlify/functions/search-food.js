@@ -9,8 +9,23 @@
 // Reuses OPENFOODFACTS_BASE_URL (already set for lookup-barcode.js) to derive the search
 // endpoint's origin, so both functions stay pointed at the same Open Food Facts
 // instance/mirror if that env var ever changes.
+//
+// FIX (Sept 2026): requests were coming back as 503s / ERR_CONNECTION_CLOSED under rapid
+// typing. Two contributing causes:
+//   1. Open Food Facts's API usage guidelines ask every client to identify itself with a
+//      descriptive User-Agent header; requests without one are more likely to be
+//      deprioritized or rejected under load. Added below.
+//   2. The frontend was firing one request per keystroke with no debounce, which multiplies
+//      the problem — that fix belongs in the search input component (e.g. src/pages/
+//      Capture.tsx), not here, but is worth doing alongside this header fix.
 
 const MAX_RESULTS = 20;
+
+// Open Food Facts asks API clients to send a descriptive User-Agent identifying the app and
+// (ideally) a contact — see https://openfoodfacts.github.io/openfoodfacts-server/api/. Requests
+// without one are more likely to be rate-limited or dropped, which is what we were seeing as
+// intermittent 503s and closed connections.
+const OFF_USER_AGENT = "FoodSafetyTracker/1.0 (Netlify Function; search-food)";
 
 function round(n) {
   return Math.round((Number(n) || 0) * 10) / 10;
@@ -107,7 +122,9 @@ export const handler = async (event) => {
 
   let offResponse;
   try {
-    offResponse = await fetch(`${searchEndpoint}?${params.toString()}`);
+    offResponse = await fetch(`${searchEndpoint}?${params.toString()}`, {
+      headers: { "User-Agent": OFF_USER_AGENT },
+    });
   } catch (err) {
     console.error("search-food: Open Food Facts request failed —", err.message);
     return {
