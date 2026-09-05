@@ -21,7 +21,7 @@ const OCR_API_ENDPOINT = "https://api.ocr.space/parse/imageurl";
 // Using Google's Gemini API (generateContent). The model name is part of the URL path, not
 // the request body — see the API key appended as a query param in extractFoodItemFromText().
 const AI_API_ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
 
 const REQUIRED_FOOD_ITEM_FIELDS = [
   "name",
