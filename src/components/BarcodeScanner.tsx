@@ -30,19 +30,21 @@ export default function BarcodeScanner({
     // automatically on Netlify's deployed URL, but for local dev use `netlify dev`
     // (not `vite dev` alone) or a tunneling tool, since plain localhost camera access
     // can be blocked on some browsers.
-    scanner
-      .start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-          if (!cancelled) lookupCode(decodedText, { fromCamera: true });
-        },
-        () => {
-          // Per-frame "nothing found this frame" callback — expected while the user is
-          // still aiming the camera, so it's intentionally ignored.
-        }
-      )
-      .then(() => {
+    const cameraStart = navigator.mediaDevices
+      ? scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 150 } },
+          (decodedText) => {
+            if (!cancelled) lookupCode(decodedText, { fromCamera: true });
+          },
+          () => {
+            // Per-frame "nothing found this frame" callback — expected while the user is
+            // still aiming the camera, so it's intentionally ignored.
+          }
+        )
+      : Promise.reject(new Error("Camera access is unavailable in this browser."));
+
+    cameraStart.then(() => {
         if (!cancelled) setStatus("scanning");
       })
       .catch((err) => {

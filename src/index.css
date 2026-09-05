@@ -177,6 +177,9 @@ a {
   background: var(--ink);
   color: var(--paper);
   border-bottom: 3px solid var(--ink);
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-left: env(safe-area-inset-left);
 }
 
 .app-header-inner {
@@ -222,6 +225,9 @@ a {
 }
 
 .app-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: #d8d6c9;
   text-decoration: none;
   font-size: 13px;
@@ -241,6 +247,7 @@ a {
   border: none;
   border-radius: var(--radius);
   padding: 8px 14px;
+  min-height: 44px;
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
@@ -260,7 +267,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 24px 24px calc(24px + env(safe-area-inset-bottom));
 }
 
 .dashboard,
@@ -268,7 +275,7 @@ a {
 .result-page {
   max-width: 640px;
   margin: 0 auto;
-  padding: 40px 24px 72px;
+  padding: 40px 24px calc(72px + env(safe-area-inset-bottom));
 }
 
 .dashboard-header {
@@ -357,7 +364,7 @@ a {
   border-radius: var(--radius);
   padding: 11px 12px;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 16px;
   font-family: var(--font-body);
   color-scheme: light;
 }
@@ -484,6 +491,7 @@ a {
   align-items: center;
   justify-content: space-between;
   margin-top: 10px;
+  gap: 12px;
 }
 
 /* --------------------------------------------------------------------- */
@@ -495,6 +503,7 @@ a {
   border: 1px solid var(--ink);
   color: var(--ink);
   padding: 12px 16px;
+  min-height: 44px;
   border-radius: var(--radius);
   font-size: 14px;
   font-weight: 600;
@@ -525,6 +534,7 @@ a {
   border: 1px solid var(--danger);
   color: var(--danger);
   padding: 12px 16px;
+  min-height: 44px;
   border-radius: var(--radius);
   font-size: 14px;
   font-weight: 700;
@@ -762,6 +772,7 @@ a {
   font-size: 13.5px;
   font-weight: 700;
   padding: 10px 12px;
+  min-height: 44px;
   cursor: pointer;
 }
 
@@ -780,10 +791,17 @@ a {
 
 .scanner-viewport {
   width: 100%;
-  min-height: 260px;
+  min-height: 240px;
   background: var(--ink);
   border-radius: var(--radius);
   overflow: hidden;
+}
+
+#barcode-scanner-viewport video {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
 .scanner-status {
@@ -824,7 +842,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: 180px;
   border: 2px dashed var(--line);
   border-radius: var(--radius);
   color: var(--ink-soft);
@@ -1036,6 +1054,7 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
   margin: var(--space-5) 0 0;
   border: 2px solid var(--brand);
   background: transparent;
@@ -1143,7 +1162,7 @@ a {
   .app-header-inner {
     align-items: flex-start;
     flex-direction: column;
-    padding: 14px 16px;
+    padding: 10px 16px;
   }
 
   .app-nav {
@@ -1155,7 +1174,20 @@ a {
   .dashboard,
   .capture-page,
   .result-page {
-    padding: 28px 16px 56px;
+    padding: 28px 16px calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .auth-wrap {
+    width: 100%;
+  }
+
+  .auth-wrap > div {
+    max-width: none !important;
+    padding: 20px 16px;
+  }
+
+  .onboarding-nav > button {
+    flex: 1 1 0;
   }
 
   .tab-bar {
@@ -1227,6 +1259,7 @@ a {
   border: none;
   color: var(--paper);
   padding: 10px 16px;
+  min-height: 44px;
   border-radius: var(--radius);
   font-size: 14px;
   font-weight: 700;

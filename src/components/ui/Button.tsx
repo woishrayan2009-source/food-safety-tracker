@@ -6,6 +6,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const baseStyle: CSSProperties = {
   width: "100%",
+  minHeight: 44,
   padding: "12px 16px",
   borderRadius: "var(--radius)",
   border: "none",
