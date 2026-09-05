@@ -34,7 +34,6 @@ export default function App() {
   return (
     <BrowserRouter>
       <PageLoadingProvider>
-        <RouteLoader />
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
@@ -47,6 +46,7 @@ export default function App() {
           <Route path="/suggestions" element={<Suggestions />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
+        <RouteLoader />
       </PageLoadingProvider>
     </BrowserRouter>
   );
